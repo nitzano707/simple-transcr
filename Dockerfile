@@ -2,17 +2,28 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
-# תלות חשובה: ffmpeg + libsndfile + git
+# התקנת תלות מערכת
 RUN apt-get update && apt-get install -y \
-    ffmpeg libsndfile1 git && \
-    rm -rf /var/lib/apt/lists/*
+    ffmpeg \
+    libsndfile1 \
+    git \
+    && rm -rf /var/lib/apt/lists/*
 
-COPY . .
+# העתקת קבצים
+COPY requirements.txt .
+COPY main.py .
 
-# התקנת תלות עם גרסאות תואמות
-RUN pip install --upgrade pip && \
-    pip install -r requirements.txt
+# התקנת חבילות Python
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir numpy==1.24.3 && \
+    pip install --no-cache-dir torch==2.0.1 torchaudio==2.0.2 && \
+    pip install --no-cache-dir -r requirements.txt
 
+# הורדת מודל Whisper מראש (אופציונלי - מאיץ את ההתחלה)
+RUN python -c "import whisper; whisper.load_model('base')"
+
+# Runpod Serverless צריך port 8000
 EXPOSE 8000
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# הרצת ה-handler
+CMD ["python", "-u", "main.py"]
