@@ -8,8 +8,10 @@ from pyannote.audio import Pipeline
 # בדיקת גרסאות
 import numpy as np
 import torch
+import pyannote.audio
 print(f"NumPy: {np.__version__}")
 print(f"PyTorch: {torch.__version__}")
+print(f"pyannote.audio: {pyannote.audio.__version__}")
 
 # טעינת מודלים
 print("Loading Whisper model...")
