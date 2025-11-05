@@ -13,23 +13,31 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 COPY main.py .
 
-# התקנה בסדר נכון
+# התקנה
 RUN pip install --no-cache-dir --upgrade pip
 
-# התקן numpy 2 ראשון
+# התקן numpy 2
 RUN pip install --no-cache-dir "numpy>=2.0,<3.0"
 
-# התקן torch + torchaudio
+# התקן torch
 RUN pip install --no-cache-dir \
     torch==2.4.0 \
     torchaudio==2.4.0
 
-# התקן שאר החבילות
-RUN pip install --no-cache-dir -r requirements.txt
+# התקן pyannote-audio 3.x (עם מקף!)
+RUN pip install --no-cache-dir pyannote-audio==3.1.1
 
-# וידוא שהכל עובד
-RUN python -c "import numpy; print(f'NumPy: {numpy.__version__}')"
-RUN python -c "import torch; print(f'PyTorch: {torch.__version__}')"
+# שאר החבילות
+RUN pip install --no-cache-dir \
+    openai-whisper \
+    lightning==2.3.0 \
+    runpod==1.6.2 \
+    requests \
+    soundfile
+
+# וידוא גרסאות
+RUN python -c "import numpy; print('NumPy:', numpy.__version__)"
+RUN python -c "import pyannote.audio; print('pyannote.audio:', pyannote.audio.__version__)"
 
 # הורדת מודל Whisper
 RUN python -c "import whisper; whisper.load_model('base')"
