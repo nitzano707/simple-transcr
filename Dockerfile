@@ -7,39 +7,31 @@ RUN apt-get update && apt-get install -y \
     ffmpeg \
     libsndfile1 \
     git \
-    wget \
     && rm -rf /var/lib/apt/lists/*
 
 # העתקת קבצים
 COPY requirements.txt .
 COPY main.py .
 
-# שלב 1: שדרוג pip
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+# התקנה בסדר נכון
+RUN pip install --no-cache-dir --upgrade pip
 
-# שלב 2: התקנת NumPy 1.x בלבד (נעילה מוחלטת!)
-RUN pip install --no-cache-dir "numpy==1.24.3" --force-reinstall
+# התקן numpy 2 ראשון
+RUN pip install --no-cache-dir "numpy>=2.0,<3.0"
 
-# שלב 3: התקנת PyTorch ללא תלות אוטומטיות
-RUN pip install --no-cache-dir --no-deps \
-    torch==2.0.1 \
-    torchaudio==2.0.2
-
-# שלב 4: התקנת שאר הספריות (עם נעילת numpy)
+# התקן torch + torchaudio
 RUN pip install --no-cache-dir \
-    openai-whisper==20230314 \
-    pyannote.audio==2.1.1 \
-    pytorch-lightning==2.0.9 \
-    runpod==1.6.2 \
-    requests==2.31.0 \
-    soundfile==0.12.1 \
-    typing-extensions \
-    filelock
+    torch==2.4.0 \
+    torchaudio==2.4.0
 
-# שלב 5: וידוא שגרסת NumPy נכונה
-RUN python -c "import numpy; print(f'NumPy version: {numpy.__version__}'); assert numpy.__version__.startswith('1.24'), 'Wrong NumPy version!'"
+# התקן שאר החבילות
+RUN pip install --no-cache-dir -r requirements.txt
 
-# שלב 6: הורדת מודל Whisper מראש (אופציונלי)
+# וידוא שהכל עובד
+RUN python -c "import numpy; print(f'NumPy: {numpy.__version__}')"
+RUN python -c "import torch; print(f'PyTorch: {torch.__version__}')"
+
+# הורדת מודל Whisper
 RUN python -c "import whisper; whisper.load_model('base')"
 
 EXPOSE 8000
