@@ -1,30 +1,30 @@
 import os
 import requests
-from fastapi import FastAPI, Request
+import tempfile
+from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import Optional
 import whisper
 from pyannote.audio import Pipeline
-import tempfile
 
-# טוען מודל תמלול
+# טען מודל Whisper
 whisper_model = whisper.load_model(os.getenv("WHISPER_MODEL", "large"))
 
-# טוען מודל דיאריזציה מהוגינג פייס
+# טען מודל דיאריזציה של pyannote עם טוקן מהסביבה
 HUGGINGFACE_TOKEN = os.getenv("HF_TOKEN")
 diarization_pipeline = Pipeline.from_pretrained(
     "pyannote/speaker-diarization@2023.07",
     use_auth_token=HUGGINGFACE_TOKEN
 )
 
-# FastAPI
+# FastAPI setup
 app = FastAPI()
 
 class InputData(BaseModel):
     file_url: str
     language: Optional[str] = "he"
     diarize: Optional[bool] = False
-    vad: Optional[bool] = False
+    vad: Optional[bool] = False  # עדיין לא בשימוש
 
 class InferenceRequest(BaseModel):
     input: InputData
@@ -35,17 +35,17 @@ async def transcribe(request: InferenceRequest):
     language = request.input.language
     do_diarize = request.input.diarize
 
-    # הורדת קובץ
-    with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as temp_file:
+    with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp:
         response = requests.get(url)
-        temp_file.write(response.content)
-        audio_path = temp_file.name
+        tmp.write(response.content)
+        tmp.flush()
+        audio_path = tmp.name
 
     # תמלול
     result = whisper_model.transcribe(audio_path, language=language)
-    text = result["text"]
+    transcription = result["text"]
 
-    # זיהוי דוברים (אם נבחר)
+    # זיהוי דוברים
     speakers = []
     if do_diarize:
         diarization = diarization_pipeline(audio_path)
@@ -57,6 +57,6 @@ async def transcribe(request: InferenceRequest):
             })
 
     return {
-        "transcription": text,
+        "transcription": transcription,
         "speakers": speakers
     }
