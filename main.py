@@ -78,7 +78,7 @@ def handler(event):
                     "start": round(turn.start, 2),
                     "end": round(turn.end, 2)
                 })
-            print(f"✓ Found {len(speakers)} segments")
+            print(f"✓ Found {len(segments)} segments")
         
         # ניקוי
         try:
