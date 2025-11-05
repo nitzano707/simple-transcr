@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+requests
+whisper
+torch
+torchaudio
+pyannote.audio==2.1.1
